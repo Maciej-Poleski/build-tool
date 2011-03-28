@@ -26,6 +26,8 @@ class File(DummyNode):
             return os.path.dirname(self.file_name)
     def get_file(self):
         return os.path.basename(self.file_name)
+    def executed(self):
+        return os.access(self.file_name,os.R_OK)
 
 class Source(File):
     pass

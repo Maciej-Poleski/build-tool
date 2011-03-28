@@ -2,8 +2,10 @@
 
 class Node:
     def __init__(self,*args):
-        self.executed=False
+        self.__executed=False
         self.args=args
+    def executed(self):
+        return False
     def make_dependencies(self):
         for arg in self.args:
             if isinstance(arg,Node):
@@ -11,12 +13,12 @@ class Node:
     def add_args(self,*args):
         self.args.extend(args)
     def make_executed(self):
-        if not self.executed:
+        if not self.__executed and not self.executed():
             self.make_dependencies()
             if self.execute():
                 print("Powłoka zwróciła informację o błędzie - przerywam!")
                 exit(1)
-        self.executed=True
+        self.__executed=True
         
 build=set()
 install=set()
