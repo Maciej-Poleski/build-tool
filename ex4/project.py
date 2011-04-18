@@ -60,7 +60,7 @@ class ObjectCode(File):
                 command_string+=' '+arg.file_name
             elif isinstance(arg,IncludeDir):
                 command_string+=' -I '+arg.path
-            else:
+            elif isinstance(self,ObjectCode):
                 command_string+=' '+arg
         return command_string
     def execute(self):
@@ -88,7 +88,7 @@ class SharedLibrary(Library):
                 command_string+=' '+arg.file_name
             elif isinstance(arg,SharedLibrary):
                 command_string+=' -L '+arg.get_directory()+' -l '+arg.get_file()+' -Xlinker -rpath='+arg.get_directory()
-            else:
+            elif isinstance(self,SharedLibrary):
                 command_string+=' '+arg
         return command_string
     def execute(self):
@@ -115,7 +115,7 @@ class Executable(File):
                 command_string+=' '+arg.file_name
             elif isinstance(arg,SharedLibrary):
                 command_string+=' -L '+arg.get_directory()+' -l '+arg.get_file()+' -Xlinker -rpath='+arg.get_directory()
-            else:
+            elif isinstance(self,Executable):
                 command_string+=' '+arg
         return command_string
     def execute(self):
