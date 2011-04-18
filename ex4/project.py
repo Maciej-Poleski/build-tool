@@ -83,7 +83,7 @@ class SharedLibrary(Library):
         command_string=''
         for arg in self.args:
             if isinstance(arg,Helper):
-                command_string+=' '+ObjectCode.get_command_string(arg)
+                command_string+=' '+SharedLibrary.get_command_string(arg)
             elif isinstance(arg,Source) or isinstance(arg,ObjectCode):
                 command_string+=' '+arg.file_name
             elif isinstance(arg,SharedLibrary):
@@ -110,7 +110,7 @@ class Executable(File):
         command_string=''
         for arg in self.args:
             if isinstance(arg,Helper):
-                command_string+=' '+ObjectCode.get_command_string(arg)
+                command_string+=' '+Executable.get_command_string(arg)
             elif isinstance(arg,Source) or isinstance(arg,ObjectCode):
                 command_string+=' '+arg.file_name
             elif isinstance(arg,SharedLibrary):
@@ -131,6 +131,9 @@ class CxxExecutable(Executable):
         return 'g++'
 
 class Helper(Node):
-    pass
-        
-build.add(CxxExecutable('HelloWorld','-O2',CxxObjectCode('HelloWorld.o',IncludeDir('/usr/include/'),CxxSource('HelloWorld.cxx')),CxxSharedLibrary('/usr/lib64/libQtCore.so'),CxxObjectCode('main.o','-O2',CxxSource('main.cxx'),IncludeDir('/usr/include')) ))
+    def execute(self):
+        pass
+
+QtCore=Helper(CxxSharedLibrary('/usr/lib64/libQtCore.so'),IncludeDir('/usr/include'))
+
+build.add(CxxExecutable('HelloWorld',QtCore,'main.cxx','HelloWorld.cxx'))
