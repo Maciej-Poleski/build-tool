@@ -51,15 +51,20 @@ class IncludeDir(Directory):
     pass
 
 class ObjectCode(File):
-    def execute(self):
-        command_args='-c -o '+self.file_name
+    def get_command_string(self):
+        command_string=''
         for arg in self.args:
-            if isinstance(arg,Source):
-                command_args+=' '+arg.file_name
+            if isinstance(arg,Helper):
+                command_string+=' '+ObjectCode.get_command_string(arg)
+            elif isinstance(arg,Source):
+                command_string+=' '+arg.file_name
             elif isinstance(arg,IncludeDir):
-                command_args+=' -I'+arg.path
+                command_string+=' -I '+arg.path
             else:
-                command_args+=' '+arg
+                command_string+=' '+arg
+        return command_string
+    def execute(self):
+        command_args='-c -o '+self.file_name+' '+ObjectCode.get_command_string(self)
         os.system(self.get_command()+' '+command_args)
 
 class CObjectCode(ObjectCode):
@@ -74,15 +79,20 @@ class Library(File):
     pass
 
 class SharedLibrary(Library):
-    def execute(self):
-        command_args='-shared -o '+self.file_name
+    def get_command_string(self):
+        command_string=''
         for arg in self.args:
-            if isinstance(arg,Source) or isinstance(arg,ObjectCode):
-                command_args+=' '+arg.file_name
+            if isinstance(arg,Helper):
+                command_string+=' '+ObjectCode.get_command_string(arg)
+            elif isinstance(arg,Source) or isinstance(arg,ObjectCode):
+                command_string+=' '+arg.file_name
             elif isinstance(arg,SharedLibrary):
-                command_args+=' -L'+arg.get_directory()+' -l'+arg.get_file()+' -Xlinker -rpath='+arg.get_directory()
+                command_string+=' -L '+arg.get_directory()+' -l '+arg.get_file()+' -Xlinker -rpath='+arg.get_directory()
             else:
-                command_args+=' '+arg
+                command_string+=' '+arg
+        return command_string
+    def execute(self):
+        command_args='-shared -o '+self.file_name+' '+SharedLibrary.get_command_string(self)
         os.system(self.get_command()+' '+command_args)
     def get_file(self):
         return File.get_file(self)[3:-3]
@@ -96,15 +106,20 @@ class CxxSharedLibrary(SharedLibrary):
         return 'g++'
 
 class Executable(File):
-    def execute(self):
-        command_args='-o '+self.file_name
+    def get_command_string(self):
+        command_string=''
         for arg in self.args:
-            if isinstance(arg,Source) or isinstance(arg,ObjectCode):
-                command_args+=' '+arg.file_name
+            if isinstance(arg,Helper):
+                command_string+=' '+ObjectCode.get_command_string(arg)
+            elif isinstance(arg,Source) or isinstance(arg,ObjectCode):
+                command_string+=' '+arg.file_name
             elif isinstance(arg,SharedLibrary):
-                command_args+=' -L'+arg.get_directory()+' -l'+arg.get_file()+' -Xlinker -rpath='+arg.get_directory()
+                command_string+=' -L '+arg.get_directory()+' -l '+arg.get_file()+' -Xlinker -rpath='+arg.get_directory()
             else:
-                command_args+=' '+arg
+                command_string+=' '+arg
+        return command_string
+    def execute(self):
+        command_args='-o '+self.file_name+' '+Executable.get_command_string(self)
         os.system(self.get_command()+' '+command_args)
 
 class CExecutable(Executable):
@@ -114,5 +129,8 @@ class CExecutable(Executable):
 class CxxExecutable(Executable):
     def get_command(self):
         return 'g++'
+
+class Helper(Node):
+    pass
         
-build.add(CExecutable('x','-O2',CObjectCode('x.o','-O2',CSource('x.c')),CSharedLibrary('libab.so',CObjectCode('a.o','-O2 -fpic',CSource('a.c')),CObjectCode('b.o','-O2 -fpic',CSource('b.c')))))
+build.add(CxxExecutable('HelloWorld','-O2',CxxObjectCode('HelloWorld.o',IncludeDir('/usr/include/'),CxxSource('HelloWorld.cxx')),CxxSharedLibrary('/usr/lib64/libQtCore.so'),CxxObjectCode('main.o','-O2',CxxSource('main.cxx'),IncludeDir('/usr/include')) ))
